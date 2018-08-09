@@ -1,0 +1,5 @@
+---
+- name: ROLENAME root action 1
+  debug:
+    msg: action 1
+...
