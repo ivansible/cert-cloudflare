@@ -1,5 +1,78 @@
 ---
-- name: ROLENAME root action 1
-  debug:
-    msg: action 1
+- name: add certbot ppa repository
+  apt_repository:
+    repo: ppa:certbot/certbot
+    filename: certbot
+    update_cache: yes
+  register: certbot_repo
+
+- name: install certbot packages
+  apt:
+    name:
+      - certbot
+      - python3-certbot-dns-cloudflare
+      - python3-pip  # just in case
+    install_recommends: no
+
+- name: create unix group for letsencrypt certificate access
+  group:
+    name: "{{ certbot_group }}"
+    state: present
+
+- name: grant certbot group access to letsencrypt files
+  file:
+    path: /etc/letsencrypt/{{ item }}
+    state: directory
+    owner: root
+    group: "{{ certbot_group }}"
+    mode: 0750
+  loop:
+    - archive
+    - live
+
+- name: create cloudflare configuration for certbot
+  copy:
+    dest: /etc/letsencrypt/dns-cloudflare.ini
+    content: |
+      dns_cloudflare_email = {{ certbot_cloudflare_email }}
+      dns_cloudflare_api_key = {{ certbot_cloudflare_api_key }}
+    owner: root
+    mode: 0600
+
+- name: create certbot configuration
+  copy:
+    dest: /etc/letsencrypt/cli.ini
+    content: |
+      # Because we are using logrotate for greater flexibility,
+      # disable the internal certbot logrotation.
+      max-log-backups = 0
+      dns-cloudflare-credentials = /etc/letsencrypt/dns-cloudflare.ini
+      server = https://{{ certbot_acme_server }}/directory
+    owner: root
+    mode: 0600
+
+- name: setup letsencrypt account registration
+  include_tasks: account.yml
+  loop: "{{ certbot_acme_accounts
+          | selectattr('server', 'equalto', certbot_acme_server)
+          | list
+          | json_query('[?!!active]')
+          | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: produce letsencrypt certificates
+  include_tasks: certificate.yml
+  loop: "{{ certbot_certificates
+          | json_query('[?!!active]')
+          | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: enable automatic certificate renewals twice daily
+  systemd:
+    name: certbot.timer
+    state: started
+    enabled: yes
+    daemon_reload: yes
 ...

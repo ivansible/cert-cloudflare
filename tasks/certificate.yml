@@ -1,0 +1,37 @@
+---
+- block:
+    - name: remove old letsencrypt certificate ({{ item.name }})
+      command:
+        argv:
+          - certbot
+          - delete
+          - --cert-name
+          - "{{ item.name }}"
+          - --non-interactive
+        removes: /etc/letsencrypt/live/{{ item.name }}
+      ignore_errors: yes
+      when: item.remove_existing | default(false) | bool
+
+    - name: create or update letsencrypt certificate ({{ item.name }})
+      command:
+        argv:
+          - certbot
+          - certonly
+          - --dns-cloudflare
+          - --cert-name
+          - "{{ item.name }}"
+          - --domains
+          - "{{ item.domains | join(',') }}"
+          - --non-interactive
+          #- --dry-run
+        creates: "{{ item.update_existing
+                   | default(false) | bool
+                   | ternary(omit, '/etc/letsencrypt/live/' + item.name)
+                  }}"
+      register: certonly_result
+      changed_when: "not (certonly_result.stdout | default(''))
+                         .startswith('skipped, since')
+                     and (certonly_result.stderr | default(''))
+                         .find('Keeping the existing certificate') < 0"
+  become: yes
+...

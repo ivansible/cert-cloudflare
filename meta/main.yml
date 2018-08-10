@@ -17,7 +17,8 @@ galaxy_info:
 
   galaxy_tags:
     - linux
-    - ansible
+    - letsencrypt
+    - certbot
 
   github_branch: master
 ...

@@ -1,4 +1,30 @@
 ---
 # defaults file for ivansible.letsencrypt-cloudflare
 
+certbot_group: certbot-data
+
+# Staging ACME v2 API endpoint
+certbot_acme_server: acme-staging-v02.api.letsencrypt.org
+
+certbot_cloudflare_email: username@email.com
+certbot_cloudflare_api_key: secret_api_key
+
+certbot_certificates:
+  - name: example.com
+    active: yes
+    remove_existing: no
+    update_existing: no
+    domains:
+      - example.com
+
+certbot_acme_accounts:
+  - name: staging
+    active: yes
+    server: acme-staging-v02.api.letsencrypt.org
+    account: 123
+
+certbot_acme_accounts_defaults:
+  key_data:
+    _e: AQAB
+    kty: RSA
 ...
