@@ -4,7 +4,7 @@
     repo: ppa:certbot/certbot
     filename: certbot
     update_cache: yes
-  register: certbot_repo
+  tags: le_cloudflare_install
 
 - name: install certbot packages
   apt:
@@ -13,11 +13,14 @@
       - python3-certbot-dns-cloudflare
       - python3-pip  # just in case
     install_recommends: no
+  tags: le_cloudflare_install
+
 
 - name: create unix group for letsencrypt certificate access
   group:
     name: "{{ certbot_group }}"
     state: present
+  tags: le_cloudflare_group
 
 - name: grant certbot group access to letsencrypt files
   file:
@@ -29,6 +32,8 @@
   loop:
     - archive
     - live
+  tags: le_cloudflare_group
+
 
 - name: create cloudflare configuration for certbot
   copy:
@@ -38,6 +43,7 @@
       dns_cloudflare_api_key = {{ certbot_cloudflare_api_key }}
     owner: root
     mode: 0600
+  tags: le_cloudflare_config
 
 - name: create certbot configuration
   copy:
@@ -50,6 +56,8 @@
       server = https://{{ certbot_acme_server }}/directory
     owner: root
     mode: 0600
+  tags: le_cloudflare_config
+
 
 - name: setup letsencrypt account registration
   include_tasks: account.yml
@@ -60,6 +68,8 @@
           | list }}"
   loop_control:
     label: "{{ item.name }}"
+  tags: le_cloudflare_accounts
+
 
 - name: produce letsencrypt certificates
   include_tasks: certificate.yml
@@ -68,6 +78,7 @@
           | list }}"
   loop_control:
     label: "{{ item.name }}"
+  tags: le_cloudflare_certificate
 
 - name: enable automatic certificate renewals twice daily
   systemd:
@@ -75,4 +86,5 @@
     state: started
     enabled: yes
     daemon_reload: yes
+  tags: le_cloudflare_renewal
 ...

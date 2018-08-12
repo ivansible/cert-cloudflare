@@ -34,4 +34,5 @@
                      and (certonly_result.stderr | default(''))
                          .find('Keeping the existing certificate') < 0"
   become: yes
+  tags: le_cloudflare_certificate
 ...

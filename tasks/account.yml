@@ -34,4 +34,5 @@
         mode: 0600
 
   become: yes
+  tags: le_cloudflare_accounts
 ...
