@@ -1,6 +1,14 @@
 # ivansible.letsencrypt-cloudflare
 This role installs letsencrypt certbot with cloudflare wildcard challenge
 
+Letsencrypt and cloudflare may fail if the same certificate is requested
+from multiple machines in parellel. Therefore we have a pair of additional
+roles if such certificate is required on multiple machines. The role
+`ivansible.letsencrypt-master` is run against the same host as the
+letsencrypt/cloudflare software and `ivansible.letsencrypt-replica` is run
+on all other machines. Whenever a letsencrypt certificate is renewed on the
+master machine, it will be pushed to replica hosts.
+
 
 ## Requirements
 
