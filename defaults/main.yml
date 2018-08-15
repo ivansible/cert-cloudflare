@@ -1,7 +1,7 @@
 ---
 # defaults file for ivansible.letsencrypt-cloudflare
 
-certbot_group: certbot-data
+certbot_group: ssl-cert
 
 # Staging ACME v2 API endpoint
 certbot_acme_server: acme-staging-v02.api.letsencrypt.org

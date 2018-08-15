@@ -2,6 +2,7 @@
 - name: add certbot ppa repository
   apt_repository:
     repo: ppa:certbot/certbot
+    codename: "{{ ansible_lsb.codename }}"
     filename: certbot
     update_cache: yes
   tags: le_cloudflare_install
@@ -12,6 +13,7 @@
       - certbot
       - python3-certbot-dns-cloudflare
       - python3-pip  # just in case
+      - ssl-cert     # for ssl-cert unix group
     install_recommends: no
   tags: le_cloudflare_install
 
@@ -33,6 +35,32 @@
     - archive
     - live
   tags: le_cloudflare_group
+
+- name: create directory for hooks
+  file:
+    path: /etc/letsencrypt/renewal-hooks/{{ item }}
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - pre
+    - post
+    - deploy
+  tags: le_replica_group
+
+- name: create a post-renewal hook to fix permissions of private keys
+  copy:
+    content: |
+      #!/bin/bash
+      find /etc/letsencrypt/archive -name privkey*.pem | xargs --no-run-if-empty chgrp {{ certbot_group }}
+      find /etc/letsencrypt/archive -name privkey*.pem | xargs --no-run-if-empty chmod o=
+    dest:
+      /etc/letsencrypt/renewal-hooks/post/privkey-permissions
+    owner: root
+    group: root
+    mode: 0750
+  tags: le_replica_group
 
 
 - name: create cloudflare configuration for certbot

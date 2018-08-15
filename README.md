@@ -9,6 +9,12 @@ letsencrypt/cloudflare software and `ivansible.letsencrypt-replica` is run
 on all other machines. Whenever a letsencrypt certificate is renewed on the
 master machine, it will be pushed to replica hosts.
 
+Certbot creates certificates and private keys with permissions 0644.
+It rather prevents world access on the directory level.
+Some software e.g. Postgresql server requires that private keys are not world-readable.
+This role takes care of asigning appropriate group to private keys
+and sets permissions of 0640. It also creates a post-renewal hook to do that.
+
 
 ## Requirements
 
@@ -19,8 +25,9 @@ None
 
 Available variables are listed below, along with default values.
 
-    certbot_group: certbot-data
+    certbot_group: ssl-cert
 Members of this unix group will have read access to certificates.
+By default this is the same group as the group used by `ssl-cert` ubuntu package.
 
     certbot_acme_server: acme-staging-v02.api.letsencrypt.org
 ACME API endpoint to use: staging or production.
