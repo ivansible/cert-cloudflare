@@ -1,5 +1,5 @@
 ---
-# defaults file for ivansible.letsencrypt-cloudflare
+# defaults file for ivansible.cert_cloudflare
 
 certbot_group: ssl-cert
 

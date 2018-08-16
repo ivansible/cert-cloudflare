@@ -2,7 +2,7 @@
 dependencies: []
 
 galaxy_info:
-  role_name: letsencrypt-cloudflare
+  role_name: cert_cloudflare
   author: "Ivan Andreev"
   description: "letsencrypt certbot with cloudflare wildcard challenge"
   company: "IvanSible"
