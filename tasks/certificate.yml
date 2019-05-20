@@ -1,6 +1,6 @@
 ---
 - block:
-    - name: remove old letsencrypt certificate ({{ item.name }})
+    - name: remove old letsencrypt certificate [{{ item.name }}] (ok to fail)
       command:
         argv:
           - certbot
@@ -12,7 +12,7 @@
       ignore_errors: yes
       when: item.remove_existing | default(false) | bool
 
-    - name: create or update letsencrypt certificate ({{ item.name }})
+    - name: create or update letsencrypt certificate [{{ item.name }}]
       command:
         argv:
           - certbot
@@ -34,7 +34,7 @@
                      and (certonly_result.stderr | default(''))
                          .find('Keeping the existing certificate') < 0"
 
-    - name: fix permissions of the private key ({{ item.name }})
+    - name: fix permissions of the private key [{{ item.name }}]
       file:
         path: /etc/letsencrypt/live/{{ item.name }}/privkey.pem
         group: "{{ certbot_group }}"
