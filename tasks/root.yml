@@ -96,6 +96,7 @@
           | list }}"
   loop_control:
     label: "{{ item.name }}"
+  when: certbot_renewal_enable |bool
   tags: le_cloudflare_accounts
 
 
@@ -106,13 +107,14 @@
           | list }}"
   loop_control:
     label: "{{ item.name }}"
+  when: certbot_renewal_enable |bool
   tags: le_cloudflare_certificate
 
 - name: enable automatic certificate renewals twice daily
   systemd:
     name: certbot.timer
-    state: started
-    enabled: yes
+    state: "{{ certbot_renewal_enable |bool |ternary('started', 'stopped') }}"
+    enabled: "{{ certbot_renewal_enable |bool }}"
     daemon_reload: yes
   tags: le_cloudflare_renewal
 ...

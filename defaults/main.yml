@@ -6,6 +6,8 @@ certbot_group: ssl-cert
 # Staging ACME v2 API endpoint
 certbot_acme_server: acme-staging-v02.api.letsencrypt.org
 
+certbot_renewal_enable: true
+
 certbot_cloudflare_email: username@email.com
 certbot_cloudflare_api_key: secret_api_key
 
