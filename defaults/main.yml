@@ -1,5 +1,5 @@
 ---
-# defaults file for ivansible.cert_cloudflare
+# defaults for ivansible.cert_cloudflare
 
 certbot_group: ssl-cert
 
@@ -13,15 +13,15 @@ certbot_cloudflare_api_key: secret_api_key
 
 certbot_certificates:
   - name: example.com
-    active: yes
-    remove_existing: no
-    update_existing: no
+    active: true
+    remove_existing: false
+    update_existing: false
     domains:
       - example.com
 
 certbot_acme_accounts:
   - name: staging
-    active: yes
+    active: true
     server: acme-staging-v02.api.letsencrypt.org
     account: 123
 

@@ -2,5 +2,5 @@
 - name: use import to become root globally
   import_tasks: root.yml
   become: true
-  tags: le_cloudflare_all
+  tags: cert_cf_all
 ...

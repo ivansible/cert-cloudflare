@@ -4,8 +4,9 @@
     repo: ppa:certbot/certbot
     codename: "{{ ansible_lsb.codename }}"
     filename: certbot
-    update_cache: yes
-  tags: le_cloudflare_install
+    mode: 0644
+    update_cache: true
+  tags: cert_cf_install
 
 - name: install certbot packages
   apt:
@@ -14,15 +15,15 @@
       - python3-certbot-dns-cloudflare
       - python3-pip  # just in case
       - ssl-cert     # for ssl-cert unix group
-    install_recommends: no
-  tags: le_cloudflare_install
+    install_recommends: false
+  tags: cert_cf_install
 
 
 - name: create unix group for letsencrypt certificate access
   group:
     name: "{{ certbot_group }}"
     state: present
-  tags: le_cloudflare_group
+  tags: cert_cf_group
 
 - name: grant certbot group access to letsencrypt files
   file:
@@ -34,7 +35,7 @@
   loop:
     - archive
     - live
-  tags: le_cloudflare_group
+  tags: cert_cf_group
 
 - name: create directory for hooks
   file:
@@ -47,7 +48,9 @@
     - pre
     - post
     - deploy
-  tags: le_replica_group
+  tags:
+    - cert_cf_group
+    - cert_replica_group
 
 - name: create a post-renewal hook to fix permissions of private keys
   copy:
@@ -60,7 +63,9 @@
     owner: root
     group: root
     mode: 0750
-  tags: le_replica_group
+  tags:
+    - cert_cf_group
+    - cert_replica_group
 
 
 - name: create cloudflare configuration for certbot
@@ -71,7 +76,7 @@
       dns_cloudflare_api_key = {{ certbot_cloudflare_api_key }}
     owner: root
     mode: 0600
-  tags: le_cloudflare_config
+  tags: cert_cf_config
 
 - name: create certbot configuration
   copy:
@@ -84,11 +89,15 @@
       server = https://{{ certbot_acme_server }}/directory
     owner: root
     mode: 0600
-  tags: le_cloudflare_config
+  tags: cert_cf_config
 
 
 - name: setup letsencrypt account registration
   include_tasks: account.yml
+  args:
+    apply:
+      become: true
+      tags: cert_cf_accounts
   loop: "{{ certbot_acme_accounts
           | selectattr('server', 'equalto', certbot_acme_server)
           | list
@@ -97,24 +106,28 @@
   loop_control:
     label: "{{ item.name }}"
   when: certbot_renewal_enable |bool
-  tags: le_cloudflare_accounts
+  tags: cert_cf_accounts
 
 
 - name: produce letsencrypt certificates
   include_tasks: certificate.yml
+  args:
+    apply:
+      become: true
+      tags: cert_cf_certificate
   loop: "{{ certbot_certificates
           | json_query('[?!!active]')
           | list }}"
   loop_control:
     label: "{{ item.name }}"
   when: certbot_renewal_enable |bool
-  tags: le_cloudflare_certificate
+  tags: cert_cf_certificate
 
 - name: enable automatic certificate renewals twice daily
   systemd:
     name: certbot.timer
     state: "{{ certbot_renewal_enable |bool |ternary('started', 'stopped') }}"
     enabled: "{{ certbot_renewal_enable |bool }}"
-    daemon_reload: yes
-  tags: le_cloudflare_renewal
+    daemon_reload: true
+  tags: cert_cf_renewal
 ...

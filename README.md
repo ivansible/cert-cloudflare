@@ -39,16 +39,16 @@ Cloudflare credentials.
 
     certbot_certificates:
       - name: example.com
-        active: yes
-        remove_existing: no
-        update_existing: no
+        active: true
+        remove_existing: false
+        update_existing: false
         domains:
           - example.com
 List of certificates parameters.
 
     certbot_acme_accounts:
       - name: staging
-        active: yes
+        active: true
         server: acme-staging-v02.api.letsencrypt.org
         account: 123
 ACME account credentials.
@@ -56,12 +56,15 @@ ACME account credentials.
 
 ## Tags
 
-- `le_cloudflare_install` -- install certbot packages
-- `le_cloudflare_group` -- grant certbot group access to certificates
-- `le_cloudflare_config` -- configure certbot with cloudflare
-- `le_cloudflare_accounts` -- setup letsencrypt account registration
-- `le_cloudflare_certificate` -- produce first certificates
-- `le_cloudflare_renewal` -- enable automatic renewals
+- `cert_cf_install` -- install certbot packages
+- `cert_cf_group` -- grant certbot group access to certificates
+- `cert_replica_group` -- deliberately overlaps with role
+                          [cert_replica](https://github.com/ivansible/cert-replica)
+- `cert_cf_config` -- configure certbot with cloudflare
+- `cert_cf_accounts` -- setup letsencrypt account registration
+- `cert_cf_certificate` -- produce first certificates
+- `cert_cf_renewal` -- enable automatic renewals
+- `cert_cf_all` -- all tasks
 
 
 ## Dependencies
@@ -77,9 +80,9 @@ None
            certbot_acme_server: acme-v02.api.letsencrypt.org
            certbot_certificates:
              - name: mydomain.com
-               active: yes
-               remove_existing: no
-               update_existing: no
+               active: true
+               remove_existing: false
+               update_existing: false
                domains:
                  - mydomain.com
                  - "*.mydomain.com"
@@ -93,4 +96,4 @@ MIT
 
 ## Author Information
 
-Created in 2018 by [IvanSible](https://github.com/ivansible)
+Created in 2018-2020 by [IvanSible](https://github.com/ivansible)

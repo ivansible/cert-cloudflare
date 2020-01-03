@@ -1,45 +1,42 @@
 ---
-- block:
-    - name: remove old letsencrypt certificate [{{ item.name }}] (ok to fail)
-      command:
-        argv:
-          - certbot
-          - delete
-          - --cert-name
-          - "{{ item.name }}"
-          - --non-interactive
-        removes: /etc/letsencrypt/live/{{ item.name }}
-      ignore_errors: yes
-      when: item.remove_existing | default(false) | bool
+- name: remove old letsencrypt certificate [{{ item.name }}] (ok to fail)
+  command:
+    argv:
+      - certbot
+      - delete
+      - --cert-name
+      - "{{ item.name }}"
+      - --non-interactive
+    removes: /etc/letsencrypt/live/{{ item.name }}
+  ignore_errors: true
+  when: item.remove_existing |default(false) |bool
 
-    - name: create or update letsencrypt certificate [{{ item.name }}]
-      command:
-        argv:
-          - certbot
-          - certonly
-          - --dns-cloudflare
-          - --cert-name
-          - "{{ item.name }}"
-          - --domains
-          - "{{ item.domains | join(',') }}"
-          - --non-interactive
-          #- --dry-run
-        creates: "{{ item.update_existing
-                   | default(false) | bool
-                   | ternary(omit, '/etc/letsencrypt/live/' + item.name)
-                  }}"
-      register: certonly_result
-      changed_when: "not (certonly_result.stdout | default(''))
-                         .startswith('skipped, since')
-                     and (certonly_result.stderr | default(''))
-                         .find('Keeping the existing certificate') < 0"
+- name: create or update letsencrypt certificate [{{ item.name }}]
+  command:
+    argv:
+      - certbot
+      - certonly
+      - --dns-cloudflare
+      - --cert-name
+      - "{{ item.name }}"
+      - --domains
+      - "{{ item.domains | join(',') }}"
+      - --non-interactive
+      # - --dry-run
+    creates: "{{ item.update_existing
+               | default(false) |bool
+               | ternary(omit, '/etc/letsencrypt/live/' + item.name)
+              }}"
+  register: certonly_result
+  changed_when: "not (certonly_result.stdout |default(''))
+                     .startswith('skipped, since')
+                 and (certonly_result.stderr |default(''))
+                     .find('Keeping the existing certificate') < 0"
 
-    - name: fix permissions of the private key [{{ item.name }}]
-      file:
-        path: /etc/letsencrypt/live/{{ item.name }}/privkey.pem
-        group: "{{ certbot_group }}"
-        # not setting state, but 'link' is assumed
-        mode: "o="  # disable others (as required by e.g. postgresql server)
-  become: yes
-  tags: le_cloudflare_certificate
+- name: fix permissions of the private key [{{ item.name }}]
+  file:
+    path: /etc/letsencrypt/live/{{ item.name }}/privkey.pem
+    group: "{{ certbot_group }}"
+    # not setting state, but 'link' is assumed
+    mode: 'o='  # disable others (as required by e.g. postgresql server)
 ...
