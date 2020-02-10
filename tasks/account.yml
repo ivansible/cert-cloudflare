@@ -1,16 +1,12 @@
 ---
-- name: define account directory ({{ item.name }})
-  set_fact:
-    account_dir: /etc/letsencrypt/accounts/{{ item.server }}/directory/{{ item.hash }}
-
-- name: directory for account files ({{ item.name }})
+- name: directory for account files ({{ name }})
   file:
     path: "{{ account_dir }}"
     state: directory
     owner: root
     mode: 0700
 
-- name: create meta.json for account ({{ item.name }})
+- name: create meta.json for account ({{ name }})
   # cannot use copy/content templating here because it changes key order
   template:
     src: account/meta.json.j2
@@ -18,14 +14,14 @@
     owner: root
     mode: 0644
 
-- name: create regr.json for account ({{ item.name }})
+- name: create regr.json for account ({{ name }})
   template:
     src: account/regr.json.j2
     dest: "{{ account_dir }}/regr.json"
     owner: root
     mode: 0644
 
-- name: create private_key.json for account ({{ item.name }})
+- name: create private_key.json for account ({{ name }})
   template:
     src: account/private_key.json.j2
     dest: "{{ account_dir }}/private_key.json"

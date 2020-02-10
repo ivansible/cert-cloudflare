@@ -27,7 +27,7 @@
 
 - name: grant certbot group access to letsencrypt files
   file:
-    path: /etc/letsencrypt/{{ item }}
+    path: "{{ certbot_dir }}/{{ item }}"
     state: directory
     owner: root
     group: "{{ certbot_group }}"
@@ -39,7 +39,7 @@
 
 - name: create directory for hooks
   file:
-    path: /etc/letsencrypt/renewal-hooks/{{ item }}
+    path: "{{ certbot_dir }}/renewal-hooks/{{ item }}"
     state: directory
     owner: root
     group: root
@@ -52,17 +52,20 @@
     - cert_cf_group
     - cert_replica_group
 
-- name: create a post-renewal hook to fix permissions of private keys
+- name: create post-renewal hook to fix permissions of private keys
   copy:
+    dest: "{{ hook_dir }}/post/privkey-permissions"
+    ## xargs option '-r' means '--no-run-if-empty'
     content: |
       #!/bin/bash
-      find /etc/letsencrypt/archive -name privkey*.pem | xargs --no-run-if-empty chgrp {{ certbot_group }}
-      find /etc/letsencrypt/archive -name privkey*.pem | xargs --no-run-if-empty chmod o=
-    dest:
-      /etc/letsencrypt/renewal-hooks/post/privkey-permissions
+      find {{ archive_dir }} -name privkey*.pem | xargs -r chgrp {{ certbot_group }}
+      find {{ archive_dir }} -name privkey*.pem | xargs -r chmod o=
     owner: root
     group: root
     mode: 0750
+  vars:
+    archive_dir: "{{ certbot_dir }}/archive"
+    hook_dir: "{{ certbot_dir }}/renewal-hooks"
   tags:
     - cert_cf_group
     - cert_replica_group
@@ -70,7 +73,7 @@
 
 - name: create cloudflare configuration for certbot
   copy:
-    dest: /etc/letsencrypt/dns-cloudflare.ini
+    dest: "{{ certbot_dir }}/dns-cloudflare.ini"
     content: |
       dns_cloudflare_email = {{ certbot_cloudflare_email }}
       dns_cloudflare_api_key = {{ certbot_cloudflare_api_key }}
@@ -80,12 +83,12 @@
 
 - name: create certbot configuration
   copy:
-    dest: /etc/letsencrypt/cli.ini
+    dest: "{{ certbot_dir }}/cli.ini"
     content: |
       # Because we are using logrotate for greater flexibility,
       # disable the internal certbot logrotation.
       max-log-backups = 0
-      dns-cloudflare-credentials = /etc/letsencrypt/dns-cloudflare.ini
+      dns-cloudflare-credentials = {{ certbot_dir }}/dns-cloudflare.ini
       server = https://{{ certbot_acme_server }}/directory
     owner: root
     mode: 0600
@@ -98,14 +101,18 @@
     apply:
       become: true
       tags: cert_cf_accounts
-  loop: "{{ certbot_acme_accounts
-          | selectattr('server', 'equalto', certbot_acme_server)
-          | list
-          | json_query('[?!!active]')
-          | list }}"
+  vars:
+    name: "{{ item.name }}"
+    active: "{{ item.active |default(true) |bool }}"
+    server: "{{ item.server }}"
+    hash: "{{ item.hash }}"
+    account_dir: "{{ certbot_dir }}/accounts/{{ server }}/directory/{{ hash }}"
+  when: active |bool
+        and server == certbot_acme_server
+        and certbot_renewal_enable |bool
+  loop: "{{ certbot_acme_accounts }}"
   loop_control:
-    label: "{{ item.name }}"
-  when: certbot_renewal_enable |bool
+    label: "{{ name }}"
   tags: cert_cf_accounts
 
 
@@ -115,19 +122,27 @@
     apply:
       become: true
       tags: cert_cf_certificate
-  loop: "{{ certbot_certificates
-          | json_query('[?!!active]')
-          | list }}"
+  vars:
+    name: "{{ item.name }}"
+    active: "{{ item.active |default(true) |bool }}"
+    domains: "{{ item.domains |flatten }}"
+    remove_existing: "{{ item.remove_existing |default(false) |bool }}"
+    update_existing: "{{ item.update_existing |default(false) |bool }}"
+    cert_subdir: "{{ certbot_dir }}/live/{{ name }}"
+  when: active |bool
+        and certbot_renewal_enable |bool
+  loop: "{{ certbot_certificates }}"
   loop_control:
-    label: "{{ item.name }}"
-  when: certbot_renewal_enable |bool
+    label: "{{ name }}"
   tags: cert_cf_certificate
 
 - name: enable automatic certificate renewals twice daily
   systemd:
     name: certbot.timer
-    state: "{{ certbot_renewal_enable |bool |ternary('started', 'stopped') }}"
-    enabled: "{{ certbot_renewal_enable |bool }}"
+    state: "{{ can_renew |ternary('started', 'stopped') }}"
+    enabled: "{{ can_renew |bool }}"
     daemon_reload: true
+  vars:
+    can_renew: "{{ certbot_renewal_cron_enable |bool }}"
   tags: cert_cf_renewal
 ...

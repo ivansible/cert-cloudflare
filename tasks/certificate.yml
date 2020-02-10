@@ -1,42 +1,47 @@
 ---
-- name: remove old letsencrypt certificate [{{ item.name }}] (ok to fail)
+- name: report domains for certificate ({{ name }})
+  debug:
+    msg: "{{ name }} >> {{ domains |join(' ') }}"
+
+- name: remove old letsencrypt certificate (ok to fail) ({{ name }})
   command:
     argv:
       - certbot
       - delete
       - --cert-name
-      - "{{ item.name }}"
+      - "{{ name }}"
       - --non-interactive
-    removes: /etc/letsencrypt/live/{{ item.name }}
+    removes: "{{ cert_subdir }}"
   ignore_errors: true
-  when: item.remove_existing |default(false) |bool
+  when: remove_existing |bool
 
-- name: create or update letsencrypt certificate [{{ item.name }}]
+- name: create or update letsencrypt certificate ({{ name }})
   command:
     argv:
       - certbot
       - certonly
       - --dns-cloudflare
       - --cert-name
-      - "{{ item.name }}"
+      - "{{ name }}"
       - --domains
-      - "{{ item.domains | join(',') }}"
+      - "{{ domains |join(',') }}"
       - --non-interactive
       # - --dry-run
-    creates: "{{ item.update_existing
-               | default(false) |bool
-               | ternary(omit, '/etc/letsencrypt/live/' + item.name)
-              }}"
+    creates: "{{ update_existing |ternary(omit, cert_subdir) }}"
   register: certonly_result
   changed_when: "not (certonly_result.stdout |default(''))
                      .startswith('skipped, since')
                  and (certonly_result.stderr |default(''))
                      .find('Keeping the existing certificate') < 0"
+  retries: 3
+  until: certonly_result is successful
+  tags: cert_cf_renew_cert
 
-- name: fix permissions of the private key [{{ item.name }}]
+- name: fix permissions of the private key ({{ name }})
   file:
-    path: /etc/letsencrypt/live/{{ item.name }}/privkey.pem
+    path: "{{ cert_subdir }}/privkey.pem"
     group: "{{ certbot_group }}"
     # not setting state, but 'link' is assumed
     mode: 'o='  # disable others (as required by e.g. postgresql server)
+  tags: cert_cf_renew_cert
 ...

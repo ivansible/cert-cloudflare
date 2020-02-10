@@ -45,6 +45,11 @@ Cloudflare credentials.
         domains:
           - example.com
 List of certificates parameters.
+`name` is required. `active` is an optional flag, defaults to true.
+`remove_existing` and `update_existing` are optional flags defaulting to false.
+`domains` is required list certificate domains,
+it can include sublists (will be flattened).
+Please note that certbot keeps first list item but sorts the remainder.
 
     certbot_acme_accounts:
       - name: staging
@@ -52,6 +57,15 @@ List of certificates parameters.
         server: acme-staging-v02.api.letsencrypt.org
         account: 123
 ACME account credentials.
+`name` and `server` are required.
+`active` is an optional flag, defaults to true.
+
+    certbot_acme_server: acme-staging-v02.api.letsencrypt.org
+This setting selects one of ACME accounts as active.
+
+    certbot_renewal_enable: true
+    certbot_certbot_renewal_cron_enable: true
+You will rarely need to change these.
 
 
 ## Tags
@@ -62,6 +76,7 @@ ACME account credentials.
                           [cert_replica](https://github.com/ivansible/cert-replica)
 - `cert_cf_config` -- configure certbot with cloudflare
 - `cert_cf_accounts` -- setup letsencrypt account registration
+                        (includes subtag `cert_cf_renew_cert`)
 - `cert_cf_certificate` -- produce first certificates
 - `cert_cf_renewal` -- enable automatic renewals
 - `cert_cf_all` -- all tasks
