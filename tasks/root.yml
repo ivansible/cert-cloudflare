@@ -59,7 +59,7 @@
     content: |
       #!/bin/bash
       find {{ archive_dir }} -name privkey*.pem | xargs -r chgrp {{ certbot_group }}
-      find {{ archive_dir }} -name privkey*.pem | xargs -r chmod o=
+      find {{ archive_dir }} -name privkey*.pem | xargs -r chmod g+r,o=
     owner: root
     group: root
     mode: 0750
