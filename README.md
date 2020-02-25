@@ -40,15 +40,22 @@ Cloudflare credentials.
     certbot_certificates:
       - name: example.com
         active: true
-        remove_existing: false
-        update_existing: false
+        existing: autoremove
         domains:
           - example.com
-List of certificates parameters.
-`name` is required. `active` is an optional flag, defaults to true.
-`remove_existing` and `update_existing` are optional flags defaulting to false.
-`domains` is required list certificate domains,
-it can include sublists (will be flattened).
+List of certificate parameters, they are:
+  - `name` - required certificate name, usually the main domain;
+  - `active` - optional flag, defaults to true,
+               certificate is skipped if this is false;
+  - `domains` - required list certificate domains,
+                can include sublists (will be flattened);
+  - `existing` - what to do if certificate already exists (optional),
+                 one of:
+    - `update` - update existing certificate;
+    - `remove` - remove existing certificate;
+    - `autoremove` - remove only if domains have changed, keep otherwise
+                     (this is the default).
+
 Please note that certbot keeps first list item but sorts the remainder.
 
     certbot_acme_accounts:
@@ -77,7 +84,7 @@ You will rarely need to change these.
 - `cert_cf_config` -- configure certbot with cloudflare
 - `cert_cf_accounts` -- setup letsencrypt account registration
                         (includes subtag `cert_cf_renew_cert`)
-- `cert_cf_certificate` -- produce first certificates
+- `cert_cf_certs` -- setup certificates
 - `cert_cf_renewal` -- enable automatic renewals
 - `cert_cf_all` -- all tasks
 

@@ -1,9 +1,16 @@
 ---
-- name: report domains for certificate ({{ name }})
+- name: report domains for certificate '{{ name }}'
   debug:
     msg: "{{ name }} >> {{ domains |join(' ') }}"
 
-- name: remove old letsencrypt certificate (ok to fail) ({{ name }})
+- name: query old letsencrypt certificate '{{ name }}' (ok to fail)
+  openssl_certificate_info:
+    path: "{{ cert_subdir }}/cert.pem"
+  ignore_errors: true
+  register: old_cert_info
+  when: existing == 'autoremove'
+
+- name: remove old letsencrypt certificate '{{ name }}' (ok to fail)
   command:
     argv:
       - certbot
@@ -13,9 +20,17 @@
       - --non-interactive
     removes: "{{ cert_subdir }}"
   ignore_errors: true
-  when: remove_existing |bool
+  vars:
+    new_domains: "{{ domains |sort |join(',') }}"
+    old_domains: "{{ old_cert_info.subject_alt_name
+                   | default([])
+                   | map('replace','DNS:','')
+                   | sort
+                   | join(',') }}"
+  when: existing == 'remove'
+        or (existing == 'autoremove' and new_domains != old_domains)
 
-- name: create or update letsencrypt certificate ({{ name }})
+- name: update letsencrypt certificate '{{ name }}'
   command:
     argv:
       - certbot
@@ -27,21 +42,20 @@
       - "{{ domains |join(',') }}"
       - --non-interactive
       # - --dry-run
-    creates: "{{ update_existing |ternary(omit, cert_subdir) }}"
+    creates: "{{ omit if existing == 'update' else cert_subdir }}"
   register: certonly_result
   changed_when: "not (certonly_result.stdout |default(''))
                      .startswith('skipped, since')
                  and (certonly_result.stderr |default(''))
                      .find('Keeping the existing certificate') < 0"
-  retries: 3
   until: certonly_result is successful
   tags: cert_cf_renew_cert
 
-- name: fix permissions of the private key ({{ name }})
+- name: fix permissions of the private key '{{ name }}'
   file:
     path: "{{ cert_subdir }}/privkey.pem"
     group: "{{ certbot_group }}"
-    # not setting state, but 'link' is assumed
+    ## not setting state, but 'link' is assumed
     mode: 'o='  # disable others (as required by e.g. postgresql server)
   tags: cert_cf_renew_cert
 ...

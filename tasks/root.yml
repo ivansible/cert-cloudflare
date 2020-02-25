@@ -121,20 +121,23 @@
   args:
     apply:
       become: true
-      tags: cert_cf_certificate
+      tags:
+        - cert_cf_certificate
+        - cert_cf_certs
+        - cert_cf_all
   vars:
     name: "{{ item.name }}"
     active: "{{ item.active |default(true) |bool }}"
     domains: "{{ item.domains |flatten }}"
-    remove_existing: "{{ item.remove_existing |default(false) |bool }}"
-    update_existing: "{{ item.update_existing |default(false) |bool }}"
+    existing: "{{ item.existing |default('autoremove') }}"
     cert_subdir: "{{ certbot_dir }}/live/{{ name }}"
   when: active |bool
         and certbot_renewal_enable |bool
   loop: "{{ certbot_certificates }}"
   loop_control:
     label: "{{ name }}"
-  tags: cert_cf_certificate
+  tags: cert_cf_certs
+
 
 - name: enable automatic certificate renewals twice daily
   systemd:

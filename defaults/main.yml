@@ -15,8 +15,7 @@ certbot_cloudflare_api_key: secret_api_key
 certbot_certificates:
   - name: example.com       # name is required
     active: true            # optional, defaults to true
-    remove_existing: false  # optional, defaults to false
-    update_existing: false  # optional, defaults to false
+    existing: autoremove    # optional, one of [update, remove, autoremove]
     domains:                # required, may include sublists, will be flattened
       - example.com
 
