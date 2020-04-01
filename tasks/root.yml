@@ -148,4 +148,20 @@
   vars:
     can_renew: "{{ certbot_renewal_cron_enable |bool }}"
   tags: cert_cf_renewal
+
+
+- name: fine-tune certbot logs
+  copy:
+    dest: /etc/logrotate.d/certbot
+    content: |
+      /var/log/letsencrypt/*.log {
+          rotate {{ certbot_max_logs }}
+          weekly
+          {{ commentout }}compress
+          missingok
+      }
+    force: true
+  vars:
+    commentout: "{{ '' if lin_compress_logs |bool or lin_compress_logs is none else '#' }}"
+  tags: cert_cf_logs
 ...

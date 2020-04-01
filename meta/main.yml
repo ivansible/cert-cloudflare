@@ -1,5 +1,6 @@
 ---
-dependencies: []
+dependencies:
+  - ivansible.lin_base  # for lin_compress_logs
 
 galaxy_info:
   role_name: cert_cloudflare

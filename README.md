@@ -24,8 +24,6 @@ None
 
 ## Variables
 
-Available variables are listed below, along with default values.
-
     certbot_group: ssl-cert
 Members of this unix group will have read access to certificates.
 By default this is the same group as the group used by `ssl-cert` ubuntu package.
@@ -74,6 +72,9 @@ This setting selects one of ACME accounts as active.
     certbot_certbot_renewal_cron_enable: true
 You will rarely need to change these.
 
+    certbot_max_logs: 12
+Limits maximum number of rotated certbot logs.
+
 
 ## Tags
 
@@ -86,12 +87,14 @@ You will rarely need to change these.
                         (includes subtag `cert_cf_renew_cert`)
 - `cert_cf_certs` -- setup certificates
 - `cert_cf_renewal` -- enable automatic renewals
+- `cert_cf_logs` -- fine-tune certbot logs
 - `cert_cf_all` -- all tasks
 
 
 ## Dependencies
 
-None
+[ivansible.lin_base](https://github.com/ivansible/lin-base):
+  - global flag `lin_compress_logs` enables compression of rotated logs
 
 
 ## Example Playbook

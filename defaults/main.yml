@@ -3,6 +3,8 @@
 
 certbot_group: ssl-cert
 
+certbot_max_logs: 12
+
 # Staging ACME v2 API endpoint
 certbot_acme_server: acme-staging-v02.api.letsencrypt.org
 
