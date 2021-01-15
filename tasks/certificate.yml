@@ -27,8 +27,8 @@
                    | map('replace','DNS:','')
                    | sort
                    | join(',') }}"
-  when: existing == 'remove'
-        or (existing == 'autoremove' and new_domains != old_domains)
+    autoremove: "{{ existing == 'autoremove' and new_domains != old_domains }}"
+  when: existing == 'remove' or autoremove
 
 - name: update letsencrypt certificate '{{ name }}'
   command:
@@ -43,12 +43,11 @@
       - --non-interactive
       # - --dry-run
     creates: "{{ omit if existing == 'update' else cert_subdir }}"
-  register: certonly_result
-  changed_when: "not (certonly_result.stdout |default(''))
-                     .startswith('skipped, since')
-                 and (certonly_result.stderr |default(''))
-                     .find('Keeping the existing certificate') < 0"
-  until: certonly_result is successful
+  register: _certonly_result
+  changed_when:
+    - _certonly_result.stdout |d('') is not match('skipped, since')
+    - _certonly_result.stderr |d('') is not search('Keeping the existing certificate')
+  until: _certonly_result is successful
   tags: cert_cf_renew_cert
 
 - name: fix permissions of the private key '{{ name }}'

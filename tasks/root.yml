@@ -6,8 +6,9 @@
     filename: certbot
     mode: 0644
     update_cache: true
+  when:
+    - ansible_lsb.release is version('20.04','<')
   tags: cert_cf_install
-  when: ansible_lsb.release is version('20.04','<')
 
 - name: install certbot packages
   apt:
@@ -108,9 +109,10 @@
     server: "{{ item.server }}"
     hash: "{{ item.hash }}"
     account_dir: "{{ certbot_dir }}/accounts/{{ server }}/directory/{{ hash }}"
-  when: active |bool
-        and server == certbot_acme_server
-        and certbot_renewal_enable |bool
+  when:
+    - active |bool
+    - server == certbot_acme_server
+    - certbot_renewal_enable |bool
   loop: "{{ certbot_acme_accounts }}"
   loop_control:
     label: "{{ name }}"
@@ -132,8 +134,9 @@
     domains: "{{ item.domains |flatten }}"
     existing: "{{ item.existing |default('autoremove') }}"
     cert_subdir: "{{ certbot_dir }}/live/{{ name }}"
-  when: active |bool
-        and certbot_renewal_enable |bool
+  when:
+    - active |bool
+    - certbot_renewal_enable |bool
   loop: "{{ certbot_certificates }}"
   loop_control:
     label: "{{ name }}"
@@ -162,7 +165,9 @@
           missingok
       }
     force: true
+    mode: 0644
   vars:
-    commentout: "{{ '' if lin_compress_logs |bool or lin_compress_logs is none else '#' }}"
+    commentout: "{{ compressing |ternary('','#') }}"
+    compressing: "{{ lin_compress_logs |bool or lin_compress_logs is none }}"
   tags: cert_cf_logs
 ...
