@@ -5,4 +5,10 @@
   tags:
     - cert_cf_all
     - cert_cloudflare_all
+
+- name: run postponed handlers
+  meta: flush_handlers
+  tags:
+    - cert_cf_all
+    - cert_cloudflare_all
 ...

@@ -27,10 +27,6 @@ None
 
 ## Variables
 
-    certbot_group: ssl-cert
-Members of this unix group will have read access to certificates.
-By default this is the same group as the group used by `ssl-cert` ubuntu package.
-
     certbot_acme_server: acme-staging-v02.api.letsencrypt.org
 ACME API endpoint to use: staging or production.
 
@@ -87,7 +83,6 @@ Limits maximum number of rotated certbot logs.
 ## Tags
 
 - `cert_cf_install` -- install certbot packages
-- `cert_cf_group` -- grant certbot group access to certificates
 - `cert_replica_group` -- deliberately overlaps with role
                           [cert_replica](https://github.com/ivansible/cert-replica)
 - `cert_cf_config` -- configure certbot with cloudflare
@@ -103,6 +98,10 @@ Limits maximum number of rotated certbot logs.
 
 [ivansible.lin_base](https://github.com/ivansible/lin-base):
   - global flag `lin_compress_logs` enables compression of rotated logs
+
+[ivansible.cert_base](https://github.com/ivansible/lin-base):
+  - global settings `certbot_x_dir`, `certbot_script`, `certbot_group`, etc
+  - common tasks in `install.yml`
 
 
 ## Example Playbook
@@ -129,4 +128,4 @@ MIT
 
 ## Author Information
 
-Created in 2018-2020 by [IvanSible](https://github.com/ivansible)
+Created in 2018-2021 by [IvanSible](https://github.com/ivansible)

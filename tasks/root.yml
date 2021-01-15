@@ -1,73 +1,23 @@
 ---
-- name: add certbot ppa repository
-  apt_repository:
-    repo: ppa:certbot/certbot
-    codename: "{{ ansible_lsb.codename }}"
-    filename: certbot
-    mode: 0644
-    update_cache: true
-  when:
-    - ansible_lsb.release is version('20.04','<')
+- name: install certbot
+  import_role:
+    name: ivansible.cert_base
+    tasks_from: install.yml
   tags: cert_cf_install
 
-- name: install certbot packages
-  apt:
-    name:
-      - certbot
-      - python3-certbot-dns-cloudflare
-      - python3-pip  # just in case
-      - ssl-cert     # for ssl-cert unix group
-    install_recommends: false
-  tags: cert_cf_install
-
-
-- name: create unix group for letsencrypt certificate access
-  group:
-    name: "{{ certbot_group }}"
-    state: present
-  tags: cert_cf_group
-
-- name: grant certbot group access to letsencrypt files
-  file:
-    path: "{{ certbot_dir }}/{{ item }}"
-    state: directory
-    owner: root
-    group: "{{ certbot_group }}"
-    mode: 0750
-  loop:
-    - archive
-    - live
-  tags: cert_cf_group
-
-- name: create directory for hooks
-  file:
-    path: "{{ certbot_dir }}/renewal-hooks/{{ item }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-  loop:
-    - pre
-    - post
-    - deploy
-  tags:
-    - cert_cf_group
-    - cert_replica_group
 
 - name: create post-renewal hook to fix permissions of private keys
   copy:
-    dest: "{{ hook_dir }}/post/privkey-permissions"
+    dest: "{{ certbot_post_dir }}/privkey-permissions"
     ## xargs option '-r' means '--no-run-if-empty'
     content: |
-      #!/bin/bash
-      find {{ archive_dir }} -name privkey*.pem | xargs -r chgrp {{ certbot_group }}
-      find {{ archive_dir }} -name privkey*.pem | xargs -r chmod g+r,o=
-    owner: root
-    group: root
+      #!/bin/sh
+      find "{{ certbot_dir }}/archive" -name "privkey*.pem" \
+          | xargs -r chgrp "{{ certbot_group }}"
+      find "{{ certbot_dir }}/archive" -name "privkey*.pem" \
+          | xargs -r chmod g+r,o=
+    force: true
     mode: 0750
-  vars:
-    archive_dir: "{{ certbot_dir }}/archive"
-    hook_dir: "{{ certbot_dir }}/renewal-hooks"
   tags:
     - cert_cf_group
     - cert_replica_group
@@ -143,14 +93,30 @@
   tags: cert_cf_certs
 
 
-- name: enable automatic certificate renewals twice daily
+- name: renew certificates twice daily (using package timer, ok to fail)
   systemd:
     name: certbot.timer
     state: "{{ can_renew |ternary('started', 'stopped') }}"
     enabled: "{{ can_renew |bool }}"
-    daemon_reload: true
+    ## _certbot_changed from imported ivansible.cert_base/install.yml
+    daemon_reload: "{{ _certbot_changed |d(false) }}"
   vars:
-    can_renew: "{{ certbot_renewal_cron_enable |bool }}"
+    cron_enabled: "{{ certbot_renewal_cron_enable |bool }}"
+    use_docker: "{{ certbot_use_docker |bool }}"
+    can_renew: "{{ cron_enabled and not use_docker }}"
+  ignore_errors: true
+  tags: cert_cf_renewal
+
+- name: renew certificates daily (using docker wrapper)
+  copy:
+    dest: /etc/cron.daily/certbot-renew
+    content: |
+      #!/bin/sh
+      exec "{{ certbot_script }}" -q renew
+    force: true
+    mode: 0755
+  notify: reload systemd daemon
+  when: certbot_use_docker |bool
   tags: cert_cf_renewal
 
 
@@ -167,6 +133,7 @@
     force: true
     mode: 0644
   vars:
+    ## lin_compress_logs: imported from lin-base
     commentout: "{{ compressing |ternary('','#') }}"
     compressing: "{{ lin_compress_logs |bool or lin_compress_logs is none }}"
   tags: cert_cf_logs

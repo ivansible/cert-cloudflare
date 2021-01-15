@@ -6,4 +6,5 @@ lin_core_time_sync: false
 lin_firewall: none
 
 certbot_renewal_enable: false
+certbot_use_docker: true
 ...

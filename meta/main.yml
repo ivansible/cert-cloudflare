@@ -1,6 +1,7 @@
 ---
 dependencies:
-  - ivansible.lin_base  # for lin_compress_logs
+  - ivansible.lin_base   # for lin_compress_logs, etc
+  - ivansible.cert_base  # for certbot_use_docker, certbot_x_dir, etc
 
 galaxy_info:
   role_name: cert_cloudflare

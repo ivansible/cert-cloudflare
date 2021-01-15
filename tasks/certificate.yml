@@ -13,7 +13,7 @@
 - name: remove old letsencrypt certificate '{{ name }}' (ok to fail)
   command:
     argv:
-      - certbot
+      - "{{ certbot_script }}"
       - delete
       - --cert-name
       - "{{ name }}"
@@ -33,7 +33,7 @@
 - name: update letsencrypt certificate '{{ name }}'
   command:
     argv:
-      - certbot
+      - "{{ certbot_script }}"
       - certonly
       - --dns-cloudflare
       - --cert-name

@@ -1,8 +1,6 @@
 ---
 # defaults for ivansible.cert_cloudflare
 
-certbot_group: ssl-cert
-
 certbot_max_logs: 12
 
 # Staging ACME v2 API endpoint
@@ -35,6 +33,4 @@ certbot_acme_accounts_defaults:
   key_data:
     _e: AQAB
     kty: RSA
-
-certbot_dir: /etc/letsencrypt
 ...
