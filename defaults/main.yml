@@ -26,6 +26,10 @@ certbot_acme_accounts:
     active: true                                  # optional, defaults to true
     server: acme-staging-v02.api.letsencrypt.org  # server is required
     account: 123
+    hash: 456
+    creation_date: "1970-01-02T03:04:05Z"
+    creation_host: localhost
+    key_data: {_n: 1, _d: 2, _p: 3, _q: 4, dp: 5, dq: 6, qi: 7}
 
 certbot_acme_accounts_defaults:
   key_data:

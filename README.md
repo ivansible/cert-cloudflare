@@ -64,6 +64,11 @@ Please note that certbot keeps first list item but sorts the remainder.
         active: true
         server: acme-staging-v02.api.letsencrypt.org
         account: 123
+        hash: 456
+        creation_date: "1970-01-02T03:04:05Z"
+        creation_host: localhost
+        key_data: {_n: 1, _d: 2, _p: 3, _q: 4, dp: 5, dq: 6, qi: 7}
+
 ACME account credentials.
 `name` and `server` are required.
 `active` is an optional flag, defaults to true.
