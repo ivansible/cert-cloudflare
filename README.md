@@ -34,6 +34,11 @@ ACME API endpoint to use: staging or production.
     certbot_cloudflare_api_key: secret_api_key
 Cloudflare credentials.
 
+    certbot_use_ecdsa: ...
+If true, will use `ECDSA` certificates, else `RSA`.
+`ECDSA` is supported from certbot version `1.10`.
+The default is `true` for dockerized certbot, `false` otherwise.
+
     certbot_certificates:
       - name: example.com
         active: true

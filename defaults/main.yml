@@ -3,6 +3,8 @@
 
 certbot_max_logs: 12
 
+certbot_use_ecdsa: "{{ certbot_use_docker |bool }}"
+
 # Staging ACME v2 API endpoint
 certbot_acme_server: acme-staging-v02.api.letsencrypt.org
 

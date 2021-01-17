@@ -7,16 +7,9 @@
 
 
 - name: create post-renewal hook to fix permissions of private keys
-  copy:
+  template:
+    src: etc/privkey-permissions.sh
     dest: "{{ certbot_post_dir }}/privkey-permissions"
-    ## xargs option '-r' means '--no-run-if-empty'
-    content: |
-      #!/bin/sh
-      find "{{ certbot_dir }}/archive" -name "privkey*.pem" \
-          | xargs -r chgrp "{{ certbot_group }}"
-      find "{{ certbot_dir }}/archive" -name "privkey*.pem" \
-          | xargs -r chmod g+r,o=
-    force: true
     mode: 0750
   tags:
     - cert_cf_group
@@ -24,25 +17,16 @@
 
 
 - name: create cloudflare configuration for certbot
-  copy:
+  template:
+    src: etc/dns-cloudflare.ini
     dest: "{{ certbot_dir }}/dns-cloudflare.ini"
-    content: |
-      dns_cloudflare_email = {{ certbot_cloudflare_email }}
-      dns_cloudflare_api_key = {{ certbot_cloudflare_api_key }}
-    owner: root
     mode: 0600
   tags: cert_cf_config
 
 - name: create certbot configuration
-  copy:
+  template:
+    src: etc/cli.ini
     dest: "{{ certbot_dir }}/cli.ini"
-    content: |
-      # Because we are using logrotate for greater flexibility,
-      # disable the internal certbot logrotation.
-      max-log-backups = 0
-      dns-cloudflare-credentials = {{ certbot_dir }}/dns-cloudflare.ini
-      server = https://{{ certbot_acme_server }}/directory
-    owner: root
     mode: 0600
   tags: cert_cf_config
 
@@ -108,12 +92,9 @@
   tags: cert_cf_renewal
 
 - name: renew certificates daily (using docker wrapper)
-  copy:
+  template:
+    src: etc/certbot-renew.sh
     dest: /etc/cron.daily/certbot-renew
-    content: |
-      #!/bin/sh
-      exec "{{ certbot_script }}" -q renew
-    force: true
     mode: 0755
   notify: reload systemd daemon
   when: certbot_use_docker |bool
@@ -121,16 +102,9 @@
 
 
 - name: fine-tune certbot logs
-  copy:
+  template:
+    src: etc/logrotate.cfg
     dest: /etc/logrotate.d/certbot
-    content: |
-      /var/log/letsencrypt/*.log {
-          rotate {{ certbot_max_logs }}
-          weekly
-          {{ commentout }}compress
-          missingok
-      }
-    force: true
     mode: 0644
   vars:
     ## lin_compress_logs: imported from lin-base
