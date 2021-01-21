@@ -9,7 +9,7 @@ galaxy_info:
   description: "letsencrypt certbot with cloudflare wildcard challenge"
   company: "IvanSible"
   license: MIT
-  min_ansible_version: 2.5
+  min_ansible_version: 2.9
 
   platforms:
     - name: Ubuntu

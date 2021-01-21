@@ -1,9 +1,10 @@
 ---
 is_permitted: false
 lin_use_ssh: false
+lin_firewall: none
 allow_sysctl: false
 lin_core_time_sync: false
-lin_firewall: none
+lin_core_system_locale: en_US.UTF-8
 
 certbot_renewal_enable: false
 certbot_use_docker: true

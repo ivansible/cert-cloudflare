@@ -1,6 +1,6 @@
 # ivansible.cert_cloudflare
 
-[![Github Test Status](https://github.com/ivansible/cert-cloudflare/workflows/Molecule%20test/badge.svg?branch=master)](https://github.com/ivansible/cert-cloudflare/actions)
+[![Github Test Status](https://github.com/ivansible/cert-cloudflare/workflows/test/badge.svg?branch=master)](https://github.com/ivansible/cert-cloudflare/actions)
 [![Ansible Galaxy](https://img.shields.io/badge/galaxy-ivansible.cert__cloudflare-68a.svg?style=flat)](https://galaxy.ansible.com/ivansible/cert_cloudflare/)
 
 This role installs letsencrypt certbot with cloudflare wildcard challenge
