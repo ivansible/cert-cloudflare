@@ -67,7 +67,8 @@
     active: "{{ item.active |default(true) |bool }}"
     domains: "{{ item.domains |flatten }}"
     existing: "{{ item.existing |default('autoremove') }}"
-    cert_subdir: "{{ certbot_dir }}/live/{{ name }}"
+    cert_subdir: "{{ certbot_live_dir }}/{{ name }}"
+    cert_arch_subdir: "{{ certbot_arch_dir }}/{{ name }}"
   when:
     - active |bool
     - certbot_renewal_enable |bool

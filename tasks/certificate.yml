@@ -53,8 +53,23 @@
 - name: fix permissions of the private key '{{ name }}'
   file:
     path: "{{ cert_subdir }}/privkey.pem"
+    owner: root
     group: "{{ certbot_group }}"
     ## not setting state, but 'link' is assumed
     mode: 'o='  # disable others (as required by e.g. postgresql server)
   tags: cert_cf_renew_cert
+
+- name: set directory permissions for certificate '{{ name }}'
+  file:
+    path: "{{ dir }}"
+    state: directory
+    owner: root
+    group: "{{ certbot_group }}"
+    mode: 'u=rwx,g=rx'
+  loop:
+    - "{{ cert_subdir }}"
+    - "{{ cert_arch_subdir }}"
+  loop_control:
+    loop_var: dir
+    label: "{{ dir |regex_replace('^%s/*' % certbot_dir) }}"
 ...
