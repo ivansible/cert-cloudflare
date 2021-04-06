@@ -41,6 +41,8 @@
       - --domains
       - "{{ domains |join(',') }}"
       - --non-interactive
+      - --key-type
+      - "{{ rsa |ternary('rsa', 'ecdsa') }}"
       # - --dry-run
     creates: "{{ omit if existing == 'update' else cert_subdir }}"
   register: _certonly_result

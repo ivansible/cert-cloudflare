@@ -66,6 +66,7 @@
     name: "{{ item.name }}"
     active: "{{ item.active |default(true) |bool }}"
     domains: "{{ item.domains |flatten }}"
+    rsa: "{{ item.rsa |default(false) |bool }}"
     existing: "{{ item.existing |default('autoremove') }}"
     cert_subdir: "{{ certbot_live_dir }}/{{ name }}"
     cert_arch_subdir: "{{ certbot_arch_dir }}/{{ name }}"
