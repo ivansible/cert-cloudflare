@@ -19,7 +19,7 @@
       - "{{ name }}"
       - --non-interactive
     removes: "{{ cert_subdir }}"
-  ignore_errors: true
+  failed_when: false
   vars:
     new_domains: "{{ domains |sort |join(',') }}"
     old_domains: "{{ old_cert_info.subject_alt_name
