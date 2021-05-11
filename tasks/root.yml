@@ -90,7 +90,12 @@
     cron_enabled: "{{ certbot_renewal_cron_enable |bool }}"
     use_docker: "{{ certbot_use_docker |bool }}"
     can_renew: "{{ cron_enabled and not use_docker }}"
-  ignore_errors: true
+  failed_when: false
+  ## mitigate lame change reports in check mode
+  register: _renew_timer_task_result
+  changed_when:
+    - _renew_timer_task_result is changed
+    - not ansible_check_mode
   tags: cert_cf_renewal
 
 - name: renew certificates daily (using docker wrapper)
